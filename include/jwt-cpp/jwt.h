@@ -1334,6 +1334,34 @@ namespace jwt {
 
 			return token + "." + encode(algo.sign(token));
 		}
+
+		/**
+		 * Sign token, ignoring payload and return result
+		 * \param algo Instance of an algorithm to sign the token with
+		 * \return Final token as a string, with empty payload part
+		 */
+		template<typename T>
+		std::string sign_only_header(const T& algo) const {
+			picojson::object obj_header;
+			obj_header["alg"] = picojson::value(algo.name());
+			for (auto& e : header_claims) {
+				obj_header[e.first] = e.second.to_json();
+			}
+			picojson::object obj_payload;
+			for (auto& e : payload_claims) {
+				obj_payload.insert({ e.first, e.second.to_json() });
+			}
+
+			auto encode = [](const std::string& data) {
+				return base::trim<alphabet::base64url>(base::encode<alphabet::base64url>(data));
+			};
+
+			std::string header = encode(picojson::value(obj_header).serialize());
+
+			std::string token = header + "." + "";
+
+			return token + "." + encode(algo.sign(header));
+		}
 	};
 
 	/**

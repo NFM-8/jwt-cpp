@@ -32,6 +32,14 @@ TEST(ClaimTest, SetAudienceAsString) {
 	ASSERT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0In0.ny5Fa0vzAg7tNL95KWg_ecBNd3XP3tdAzq0SFA6diY4", token);
 }
 
+TEST(ClaimTest, SetAudienceAsStringOnlyHeader) {
+	auto token = jwt::create()
+		.set_type("JWT")
+		.set_audience("test")
+		.sign_only_header(jwt::algorithm::hs256("test"));
+	ASSERT_EQ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..-njikFE6TpCYbJDAadhCNMyTpM2FTs6W3ffmIk7Pv88", token);
+}
+
 TEST(ClaimTest, SetArray) {
 	std::vector<int64_t> vect = {
 		100,
@@ -44,6 +52,18 @@ TEST(ClaimTest, SetArray) {
 	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0.eyJ0ZXN0IjpbMTAwLDIwLDEwXX0.");
 }
 
+TEST(ClaimTest, SetArrayOnlyHeader) {
+	std::vector<int64_t> vect = {
+		100,
+		20,
+		10
+	};
+	auto token = jwt::create()
+		.set_payload_claim("test", jwt::claim(vect.begin(), vect.end()))
+		.sign_only_header(jwt::algorithm::none{});
+	ASSERT_EQ(token, "eyJhbGciOiJub25lIn0..");
+}
+
 TEST(ClaimTest, SetObject) {
 	std::istringstream iss{"{\"api-x\": [1]}"};
 	jwt::claim object;
@@ -54,6 +74,18 @@ TEST(ClaimTest, SetObject) {
 		.set_payload_claim("namespace", object)
 		.sign(jwt::algorithm::hs256("test"));
 	ASSERT_EQ(token, "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lc3BhY2UiOnsiYXBpLXgiOlsxXX19.F8I6I2RcSF98bKa0IpIz09fRZtHr1CWnWKx2za-tFQA");
+}
+
+TEST(ClaimTest, SetObjectOnlyHeader) {
+	std::istringstream iss{"{\"api-x\": [1]}"};
+	jwt::claim object;
+	iss >> object;
+	ASSERT_EQ(object.get_type() , jwt::claim::type::object);
+
+	auto token = jwt::create()
+		.set_payload_claim("namespace", object)
+		.sign_only_header(jwt::algorithm::hs256("test"));
+	ASSERT_EQ(token, "eyJhbGciOiJIUzI1NiJ9..0nXgA1sLRbsGJki7PABdL8RD54EZUiGQ0qbxE_xuPq0");
 }
 
 TEST(ClaimTest, SetAlgorithm) {
